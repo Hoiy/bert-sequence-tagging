@@ -123,34 +123,15 @@ flags.DEFINE_integer(
 
 
 class InputExample(object):
-  """A single training/test example for simple sequence classification."""
-
-  def __init__(self, guid, text_a, text_b=None, label=None):
-    """Constructs a InputExample.
-
-    Args:
-      guid: Unique id for the example.
-      text_a: string. The untokenized text of the first sequence. For single
-        sequence tasks, only this sequence must be specified.
-      text_b: (Optional) string. The untokenized text of the second sequence.
-        Only must be specified for sequence pair tasks.
-      label: (Optional) string. The label of the example. This should be
-        specified for train and dev examples, but not for test examples.
-    """
-    self.guid = guid
-    self.text_a = text_a
-    self.text_b = text_b
-    self.label = label
-
+  def __init__(self, article_id, main_content):
+    self.article_id = article_id
+    self.main_content = main_content
+    
 
 class InputFeatures(object):
-  """A single set of features of data."""
-
-  def __init__(self, input_ids, input_mask, segment_ids, label_id):
-    self.input_ids = input_ids
-    self.input_mask = input_mask
-    self.segment_ids = segment_ids
-    self.label_id = label_id
+  def __init__(self, token_indices, truths):
+    self.token_indices = token_indices
+    self.truths = truths
 
 
 class DataProcessor(object):
@@ -168,24 +149,13 @@ class DataProcessor(object):
     """Gets the list of labels for this data set."""
     raise NotImplementedError()
 
-  @classmethod
-  def _read_tsv(cls, input_file, quotechar=None):
-    """Reads a tab separated value file."""
-    with tf.gfile.Open(input_file, "r") as f:
-      reader = csv.reader(f, delimiter="\t", quotechar=quotechar)
-      lines = []
-      for line in reader:
-        lines.append(line)
-      return lines
-
-class TeaProcessor(DataProcessor):
-  """Processor for the TEA data set."""
-
+    
+class ArticleContentProcessor(DataProcessor):
   def __init__(self):
     self.language = "zh"
 
   def get_train_examples(self, data_dir):
-    lines = self._read_tsv(os.path.join(data_dir,'train_row__.txt'))
+    lines = pd.read_parquet(os.path.join(data_dir,'article_contents.snappy.parquet'))
     examples = []
     for (i, line) in enumerate(lines):
       #if i == 0:
